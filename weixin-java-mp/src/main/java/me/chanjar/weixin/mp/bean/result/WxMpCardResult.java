@@ -1,8 +1,8 @@
 package me.chanjar.weixin.mp.bean.result;
 
+import lombok.Data;
+import me.chanjar.weixin.common.util.ToStringUtils;
 import me.chanjar.weixin.mp.bean.WxMpCard;
-import org.apache.commons.lang3.builder.ToStringBuilder;
-import org.apache.commons.lang3.builder.ToStringStyle;
 
 import java.io.Serializable;
 
@@ -12,7 +12,9 @@ import java.io.Serializable;
  * @author YuJian
  * @version 15/11/11
  */
+@Data
 public class WxMpCardResult implements Serializable {
+  private static final long serialVersionUID = -7950878428289035637L;
 
   private String errorCode;
 
@@ -26,57 +28,9 @@ public class WxMpCardResult implements Serializable {
 
   private Boolean canConsume;
 
-  public String getErrorCode() {
-    return errorCode;
-  }
-
-  public void setErrorCode(String errorCode) {
-    this.errorCode = errorCode;
-  }
-
-  public String getErrorMsg() {
-    return errorMsg;
-  }
-
-  public void setErrorMsg(String errorMsg) {
-    this.errorMsg = errorMsg;
-  }
-
-  public String getOpenId() {
-    return openId;
-  }
-
-  public void setOpenId(String openId) {
-    this.openId = openId;
-  }
-
-  public WxMpCard getCard() {
-    return card;
-  }
-
-  public void setCard(WxMpCard card) {
-    this.card = card;
-  }
-
   @Override
   public String toString() {
-    return ToStringBuilder.reflectionToString(this, ToStringStyle.JSON_STYLE);
-  }
-
-  public String getUserCardStatus() {
-    return userCardStatus;
-  }
-
-  public void setUserCardStatus(String userCardStatus) {
-    this.userCardStatus = userCardStatus;
-  }
-
-  public Boolean getCanConsume() {
-    return canConsume;
-  }
-
-  public void setCanConsume(Boolean canConsume) {
-    this.canConsume = canConsume;
+    return ToStringUtils.toSimpleString(this);
   }
 
 }

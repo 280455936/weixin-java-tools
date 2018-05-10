@@ -1,33 +1,34 @@
 package me.chanjar.weixin.mp.api;
 
 import me.chanjar.weixin.common.bean.WxAccessToken;
-import me.chanjar.weixin.common.util.http.ApacheHttpClientBuilder;
+import me.chanjar.weixin.common.util.ToStringUtils;
+import me.chanjar.weixin.common.util.http.apache.ApacheHttpClientBuilder;
 
-import javax.net.ssl.SSLContext;
 import java.io.File;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * 基于内存的微信配置provider，在实际生产环境中应该将这些配置持久化
- * @author chanjarster
  *
+ * @author chanjarster
  */
 public class WxMpInMemoryConfigStorage implements WxMpConfigStorage {
 
   protected volatile String appId;
   protected volatile String secret;
-  protected volatile String partnerId;
-  protected volatile String partnerKey;
   protected volatile String token;
+  protected volatile String templateId;
   protected volatile String accessToken;
   protected volatile String aesKey;
   protected volatile long expiresTime;
 
   protected volatile String oauth2redirectUri;
 
-  protected volatile String http_proxy_host;
-  protected volatile int http_proxy_port;
-  protected volatile String http_proxy_username;
-  protected volatile String http_proxy_password;
+  protected volatile String httpProxyHost;
+  protected volatile int httpProxyPort;
+  protected volatile String httpProxyUsername;
+  protected volatile String httpProxyPassword;
 
   protected volatile String jsapiTicket;
   protected volatile long jsapiTicketExpiresTime;
@@ -35,18 +36,29 @@ public class WxMpInMemoryConfigStorage implements WxMpConfigStorage {
   protected volatile String cardApiTicket;
   protected volatile long cardApiTicketExpiresTime;
 
+  protected Lock accessTokenLock = new ReentrantLock();
+  protected Lock jsapiTicketLock = new ReentrantLock();
+  protected Lock cardApiTicketLock = new ReentrantLock();
+
   /**
    * 临时文件目录
    */
   protected volatile File tmpDirFile;
-  
-  protected volatile SSLContext sslContext;
 
   protected volatile ApacheHttpClientBuilder apacheHttpClientBuilder;
 
   @Override
   public String getAccessToken() {
     return this.accessToken;
+  }
+
+  public void setAccessToken(String accessToken) {
+    this.accessToken = accessToken;
+  }
+
+  @Override
+  public Lock getAccessTokenLock() {
+    return this.accessTokenLock;
   }
 
   @Override
@@ -58,11 +70,11 @@ public class WxMpInMemoryConfigStorage implements WxMpConfigStorage {
   public synchronized void updateAccessToken(WxAccessToken accessToken) {
     updateAccessToken(accessToken.getAccessToken(), accessToken.getExpiresIn());
   }
-  
+
   @Override
   public synchronized void updateAccessToken(String accessToken, int expiresInSeconds) {
     this.accessToken = accessToken;
-    this.expiresTime = System.currentTimeMillis() + (expiresInSeconds - 200) * 1000l;
+    this.expiresTime = System.currentTimeMillis() + (expiresInSeconds - 200) * 1000L;
   }
 
   @Override
@@ -79,12 +91,9 @@ public class WxMpInMemoryConfigStorage implements WxMpConfigStorage {
     this.jsapiTicket = jsapiTicket;
   }
 
-  public long getJsapiTicketExpiresTime() {
-    return this.jsapiTicketExpiresTime;
-  }
-
-  public void setJsapiTicketExpiresTime(long jsapiTicketExpiresTime) {
-    this.jsapiTicketExpiresTime = jsapiTicketExpiresTime;
+  @Override
+  public Lock getJsapiTicketLock() {
+    return this.jsapiTicketLock;
   }
 
   @Override
@@ -96,7 +105,7 @@ public class WxMpInMemoryConfigStorage implements WxMpConfigStorage {
   public synchronized void updateJsapiTicket(String jsapiTicket, int expiresInSeconds) {
     this.jsapiTicket = jsapiTicket;
     // 预留200秒的时间
-    this.jsapiTicketExpiresTime = System.currentTimeMillis() + (expiresInSeconds - 200) * 1000l;
+    this.jsapiTicketExpiresTime = System.currentTimeMillis() + (expiresInSeconds - 200) * 1000L;
   }
 
   @Override
@@ -112,6 +121,15 @@ public class WxMpInMemoryConfigStorage implements WxMpConfigStorage {
     return this.cardApiTicket;
   }
 
+  public void setCardApiTicket(String cardApiTicket) {
+    this.cardApiTicket = cardApiTicket;
+  }
+
+  @Override
+  public Lock getCardApiTicketLock() {
+    return this.cardApiTicketLock;
+  }
+
   @Override
   public boolean isCardApiTicketExpired() {
     return System.currentTimeMillis() > this.cardApiTicketExpiresTime;
@@ -121,7 +139,7 @@ public class WxMpInMemoryConfigStorage implements WxMpConfigStorage {
   public synchronized void updateCardApiTicket(String cardApiTicket, int expiresInSeconds) {
     this.cardApiTicket = cardApiTicket;
     // 预留200秒的时间
-    this.cardApiTicketExpiresTime = System.currentTimeMillis() + (expiresInSeconds - 200) * 1000l;
+    this.cardApiTicketExpiresTime = System.currentTimeMillis() + (expiresInSeconds - 200) * 1000L;
   }
 
   @Override
@@ -134,9 +152,17 @@ public class WxMpInMemoryConfigStorage implements WxMpConfigStorage {
     return this.appId;
   }
 
+  public void setAppId(String appId) {
+    this.appId = appId;
+  }
+
   @Override
   public String getSecret() {
     return this.secret;
+  }
+
+  public void setSecret(String secret) {
+    this.secret = secret;
   }
 
   @Override
@@ -144,21 +170,26 @@ public class WxMpInMemoryConfigStorage implements WxMpConfigStorage {
     return this.token;
   }
 
+  public void setToken(String token) {
+    this.token = token;
+  }
+
+  @Override
+  public String getTemplateId() {
+    return this.templateId;
+  }
+
+  public void setTemplateId(String templateId) {
+    this.templateId = templateId;
+  }
+
   @Override
   public long getExpiresTime() {
     return this.expiresTime;
   }
 
-  public void setAppId(String appId) {
-    this.appId = appId;
-  }
-
-  public void setSecret(String secret) {
-    this.secret = secret;
-  }
-
-  public void setToken(String token) {
-    this.token = token;
+  public void setExpiresTime(long expiresTime) {
+    this.expiresTime = expiresTime;
   }
 
   @Override
@@ -168,14 +199,6 @@ public class WxMpInMemoryConfigStorage implements WxMpConfigStorage {
 
   public void setAesKey(String aesKey) {
     this.aesKey = aesKey;
-  }
-
-  public void setAccessToken(String accessToken) {
-    this.accessToken = accessToken;
-  }
-
-  public void setExpiresTime(long expiresTime) {
-    this.expiresTime = expiresTime;
   }
 
   @Override
@@ -188,80 +211,44 @@ public class WxMpInMemoryConfigStorage implements WxMpConfigStorage {
   }
 
   @Override
-  public String getHttp_proxy_host() {
-    return this.http_proxy_host;
+  public String getHttpProxyHost() {
+    return this.httpProxyHost;
   }
 
-  public void setHttp_proxy_host(String http_proxy_host) {
-    this.http_proxy_host = http_proxy_host;
-  }
-
-  @Override
-  public int getHttp_proxy_port() {
-    return this.http_proxy_port;
-  }
-
-  public void setHttp_proxy_port(int http_proxy_port) {
-    this.http_proxy_port = http_proxy_port;
+  public void setHttpProxyHost(String httpProxyHost) {
+    this.httpProxyHost = httpProxyHost;
   }
 
   @Override
-  public String getHttp_proxy_username() {
-    return this.http_proxy_username;
+  public int getHttpProxyPort() {
+    return this.httpProxyPort;
   }
 
-  public void setHttp_proxy_username(String http_proxy_username) {
-    this.http_proxy_username = http_proxy_username;
+  public void setHttpProxyPort(int httpProxyPort) {
+    this.httpProxyPort = httpProxyPort;
   }
 
   @Override
-  public String getHttp_proxy_password() {
-    return this.http_proxy_password;
+  public String getHttpProxyUsername() {
+    return this.httpProxyUsername;
   }
 
-  public void setHttp_proxy_password(String http_proxy_password) {
-    this.http_proxy_password = http_proxy_password;
+  public void setHttpProxyUsername(String httpProxyUsername) {
+    this.httpProxyUsername = httpProxyUsername;
+  }
+
+  @Override
+  public String getHttpProxyPassword() {
+    return this.httpProxyPassword;
+  }
+
+  public void setHttpProxyPassword(String httpProxyPassword) {
+    this.httpProxyPassword = httpProxyPassword;
   }
 
   @Override
   public String toString() {
-    return "WxMpInMemoryConfigStorage{" +
-        "appId='" + this.appId + '\'' +
-        ", secret='" + this.secret + '\'' +
-        ", token='" + this.token + '\'' +
-        ", partnerId='" + this.partnerId + '\'' +
-        ", partnerKey='" + this.partnerKey + '\'' +
-        ", accessToken='" + this.accessToken + '\'' +
-        ", aesKey='" + this.aesKey + '\'' +
-        ", expiresTime=" + this.expiresTime +
-        ", http_proxy_host='" + this.http_proxy_host + '\'' +
-        ", http_proxy_port=" + this.http_proxy_port +
-        ", http_proxy_username='" + this.http_proxy_username + '\'' +
-        ", http_proxy_password='" + this.http_proxy_password + '\'' +
-        ", jsapiTicket='" + this.jsapiTicket + '\'' +
-        ", jsapiTicketExpiresTime='" + this.jsapiTicketExpiresTime + '\'' +
-        ", cardApiTicket='" + this.cardApiTicket + '\'' +
-        ", cardApiTicketExpiresTime='" + this.cardApiTicketExpiresTime + '\'' +
-        ", tmpDirFile='" + this.tmpDirFile + '\'' +
-        '}';
-  }
-
-  @Override
-  public String getPartnerId() {
-      return this.partnerId;
-  }
-
-  public void setPartnerId(String partnerId) {
-      this.partnerId = partnerId;
-  }
-
-  @Override
-  public String getPartnerKey() {
-      return this.partnerKey;
-  }
-
-  public void setPartnerKey(String partnerKey) {
-      this.partnerKey = partnerKey;
+    return ToStringUtils.toSimpleString(this);
   }
 
   @Override
@@ -274,15 +261,6 @@ public class WxMpInMemoryConfigStorage implements WxMpConfigStorage {
   }
 
   @Override
-  public SSLContext getSSLContext() {
-    return this.sslContext;
-  }
-  
-  public void setSSLContext(SSLContext context) {
-    this.sslContext = context;
-  }
-
-  @Override
   public ApacheHttpClientBuilder getApacheHttpClientBuilder() {
     return this.apacheHttpClientBuilder;
   }
@@ -290,4 +268,26 @@ public class WxMpInMemoryConfigStorage implements WxMpConfigStorage {
   public void setApacheHttpClientBuilder(ApacheHttpClientBuilder apacheHttpClientBuilder) {
     this.apacheHttpClientBuilder = apacheHttpClientBuilder;
   }
+
+  public long getJsapiTicketExpiresTime() {
+    return this.jsapiTicketExpiresTime;
+  }
+
+  public void setJsapiTicketExpiresTime(long jsapiTicketExpiresTime) {
+    this.jsapiTicketExpiresTime = jsapiTicketExpiresTime;
+  }
+
+  public long getCardApiTicketExpiresTime() {
+    return this.cardApiTicketExpiresTime;
+  }
+
+  public void setCardApiTicketExpiresTime(long cardApiTicketExpiresTime) {
+    this.cardApiTicketExpiresTime = cardApiTicketExpiresTime;
+  }
+
+  @Override
+  public boolean autoRefreshToken() {
+    return true;
+  }
+
 }
